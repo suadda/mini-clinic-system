@@ -1,40 +1,36 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config();
+const morgan = require('morgan');
+
+const responseFormatter = require('./middleware/response');
+const routes = require('./routes');
+const { notFound, errorHandler } = require('./middleware/errorHandler');
+const { pool } = require('./config/db');
 
 const app = express();
 
-// Middlewares
 app.use(cors());
 app.use(express.json());
+if (process.env.NODE_ENV !== 'production') app.use(morgan('dev'));
+app.use(responseFormatter);
 
-// Standard API Response Formatting Middleware
-app.use((req, res, next) => {
-    res.sendSuccess = (data = {}, message = "Success", statusCode = 200) => {
-        return res.status(statusCode).json({
-            success: true,
-            message,
-            data
-        });
-    };
+app.get('/', (req, res) =>
+  res.sendSuccess({ name: 'Mini Clinic Information System API', version: '1.0.0' }, 'API is running'));
 
-    res.sendError = (errors = {}, message = "Validation Error", statusCode = 400) => {
-        return res.status(statusCode).json({
-            success: false,
-            message,
-            errors
-        });
-    };
-    next();
-});
+app.use('/api', routes);
 
-// Basic Health Check Endpoint
-app.get('/', (req, res) => {
-    res.sendSuccess({}, "Mini Clinic Information System API is running");
-});
+app.use(notFound);
+app.use(errorHandler);
 
-// Server Initialization
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`Backend server running on http://localhost:${PORT}`);
-});
+
+(async () => {
+  try {
+    await pool.query('SELECT 1');
+    console.log('Database connected');
+  } catch (err) {
+    console.error('Database connection failed:', err.message);
+  }
+  app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+})();
