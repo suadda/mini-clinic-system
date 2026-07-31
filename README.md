@@ -1,77 +1,77 @@
-# Nexa Clinic — Mini Clinic Information System
+# Nexa Clinic — Sistem Informasi Klinik Mini
 
-A web-based clinic information system for managing patients, registrations, queues, and SOAP-based medical examinations, with JWT authentication and three user roles.
+Aplikasi web untuk mengelola data pasien, pendaftaran, antrean, dan pemeriksaan medis dengan metode SOAP. Dilengkapi autentikasi JWT dan tiga peran pengguna.
 
-Built as a technical assignment: **React** frontend, **Node.js / Express** REST API, and **PostgreSQL**.
-
----
-
-## Table of Contents
-
-- [Tech Stack](#tech-stack)
-- [Features](#features)
-- [Project Structure](#project-structure)
-- [Prerequisites](#prerequisites)
-- [Getting Started](#getting-started)
-  - [1. Clone](#1-clone-the-repository)
-  - [2. Database (migration)](#2-database-setup-migration)
-  - [3. Backend](#3-backend-setup)
-  - [4. Frontend](#4-frontend-setup)
-- [Demo Accounts](#demo-accounts)
-- [Environment Variables](#environment-variables)
-- [API Reference](#api-reference)
-- [Roles & Permissions](#roles--permissions)
-- [Notes & Assumptions](#notes--assumptions)
+Dibuat sebagai technical assignment: frontend **React**, REST API **Node.js / Express**, dan database **PostgreSQL**.
 
 ---
 
-## Tech Stack
+## Daftar Isi
 
-| Layer     | Technology                                              |
+- [Teknologi](#teknologi)
+- [Fitur](#fitur)
+- [Struktur Proyek](#struktur-proyek)
+- [Prasyarat](#prasyarat)
+- [Cara Menjalankan](#cara-menjalankan)
+  - [1. Clone Repository](#1-clone-repository)
+  - [2. Setup Database (Migrasi)](#2-setup-database-migrasi)
+  - [3. Setup Backend](#3-setup-backend)
+  - [4. Setup Frontend](#4-setup-frontend)
+- [Akun Demo](#akun-demo)
+- [Variabel Lingkungan (.env)](#variabel-lingkungan-env)
+- [Daftar API](#daftar-api)
+- [Hak Akses per Peran](#hak-akses-per-peran)
+- [Catatan & Asumsi](#catatan--asumsi)
+
+---
+
+## Teknologi
+
+| Lapisan   | Teknologi                                               |
 | --------- | ------------------------------------------------------- |
 | Frontend  | React 18, Vite, React Router v6, Tailwind CSS, Axios    |
 | Backend   | Node.js, Express, JSON Web Token (JWT), bcryptjs        |
 | Database  | PostgreSQL                                              |
-| Validation| express-validator                                       |
+| Validasi  | express-validator                                       |
 
 ---
 
-## Features
+## Fitur
 
-- **Authentication & Authorization** — login / logout with JWT; three roles (Administrator, Dokter, Petugas Pendaftaran) with route-level access control.
-- **Master Data Pasien** — full CRUD with auto-generated medical record number (`RM000001`…), unique 16-digit NIK, search, and pagination.
-- **Pendaftaran** — register a patient visit to a poli and doctor, with payment type and initial complaint.
-- **Antrean (Queue)** — auto-generated queue number per poli per day, call next, and status changes (menunggu → dipanggil → dilayani → selesai / dilewati).
-- **Pemeriksaan (SOAP)** — Subjective, Objective (vitals), Assessment, Plan, plus medical actions and drug prescriptions, with per-patient examination history.
-- **Dashboard** — daily summary: total patients, today's patients, today's queue, waiting, and completed.
+- **Autentikasi & Otorisasi** — login / logout dengan JWT; tiga peran (Administrator, Dokter, Petugas Pendaftaran) dengan kontrol akses di setiap halaman dan endpoint.
+- **Master Data Pasien** — CRUD lengkap dengan nomor rekam medis otomatis (`RM000001`…), NIK 16 digit yang unik, pencarian, dan pagination.
+- **Pendaftaran** — mendaftarkan kunjungan pasien ke poli dan dokter tujuan, lengkap dengan jenis pembayaran dan keluhan awal.
+- **Antrean** — nomor antrean otomatis per poli per hari, panggil antrean, dan perubahan status (menunggu → dipanggil → dilayani → selesai / dilewati).
+- **Pemeriksaan (SOAP)** — Subjective, Objective (tanda vital), Assessment, Plan, ditambah tindakan medis dan resep obat, beserta riwayat pemeriksaan per pasien.
+- **Dashboard** — ringkasan harian: total pasien, pasien hari ini, antrean hari ini, menunggu, dan selesai.
 
 ---
 
-## Project Structure
+## Struktur Proyek
 
 ```
 nexa-clinic-system/
 ├── backend/
 │   ├── src/
-│   │   ├── config/         # database pool
+│   │   ├── config/         # koneksi database (pool)
 │   │   ├── controllers/    # auth, patient, registration, queue,
 │   │   │                   # medicalRecord, prescription, dashboard, master
-│   │   ├── middleware/     # auth (JWT + roles), validate, response, errorHandler
-│   │   ├── routes/         # one router per resource + index
-│   │   ├── validators/     # express-validator rule sets
+│   │   ├── middleware/     # auth (JWT + peran), validate, response, errorHandler
+│   │   ├── routes/         # satu router per resource + index
+│   │   ├── validators/     # aturan validasi express-validator
 │   │   ├── utils/          # asyncHandler, ApiError
-│   │   └── index.js        # app entry (mounts everything under /api)
+│   │   └── index.js        # entry point (semua route di-mount ke /api)
 │   ├── .env.example
 │   └── package.json
 ├── frontend/
 │   ├── src/
-│   │   ├── api/            # axios client (attaches JWT, handles 401)
+│   │   ├── api/            # axios client (menyisipkan JWT, menangani 401)
 │   │   ├── context/        # AuthContext
-│   │   ├── components/     # Layout, Modal, Pagination, ProtectedRoute, etc.
-│   │   ├── lib/            # constants (roles, statuses, nav)
+│   │   ├── components/     # Layout, Modal, Pagination, ProtectedRoute, dll.
+│   │   ├── lib/            # constants (peran, status, menu navigasi)
 │   │   ├── pages/          # Login, Dashboard, Patients, Registrations, Queue, Examination
-│   │   ├── App.jsx         # routes
-│   │   └── main.jsx        # entry
+│   │   ├── App.jsx         # definisi route
+│   │   └── main.jsx        # entry point
 │   ├── index.html
 │   ├── vite.config.js
 │   ├── tailwind.config.js
@@ -79,54 +79,54 @@ nexa-clinic-system/
 │   ├── .env.example
 │   └── package.json
 ├── docs/
-│   ├── ERD.md              # entity-relationship diagram (Mermaid)
+│   ├── ERD.md              # diagram relasi entitas (Mermaid)
 │   └── erd.png
-├── database.sql            # schema + seed data
+├── database.sql            # skema + data awal (seed)
 └── README.md
 ```
 
 ---
 
-## Prerequisites
+## Prasyarat
 
-- **Node.js** v18 or newer
-- **PostgreSQL** v14 or newer
-- **npm** (bundled with Node.js)
+- **Node.js** v18 atau lebih baru
+- **PostgreSQL** v14 atau lebih baru
+- **npm** (sudah termasuk saat instalasi Node.js)
 
 ---
 
-## Getting Started
+## Cara Menjalankan
 
-### 1. Clone the repository
+### 1. Clone Repository
 
 ```bash
 git clone https://github.com/suadda/mini-clinic-system.git
 cd mini-clinic-system
 ```
 
-### 2. Database setup (migration)
+### 2. Setup Database (Migrasi)
 
-Create the database, then import the schema and seed data from `database.sql`. This single file contains all tables, constraints, indexes, and seed records — no separate migration tool is required.
+Buat database, lalu import skema dan data awal dari `database.sql`. File ini sudah berisi seluruh tabel, constraint, index, dan data awal — tidak perlu tool migrasi terpisah.
 
-**Option A — using `psql` (command line):**
+**Opsi A — melalui `psql` (command line):**
 
 ```bash
-# create the database
+# buat database
 createdb clinic_db
 
-# import schema + seed data
+# import skema + data awal
 psql -U postgres -d clinic_db -f database.sql
 ```
 
-**Option B — using a GUI (DBeaver / pgAdmin):**
+**Opsi B — melalui GUI (DBeaver / pgAdmin):**
 
-1. Create a new database named `clinic_db`.
-2. Open a SQL editor **connected to `clinic_db`** (not the default `postgres` database).
-3. Open `database.sql` and execute the whole script.
+1. Buat database baru dengan nama `clinic_db`.
+2. Buka SQL editor yang **terhubung ke `clinic_db`** (bukan database bawaan `postgres`).
+3. Buka file `database.sql`, lalu jalankan seluruh skrip.
 
-The script is safe to re-run: it drops and recreates all objects (`DROP ... IF EXISTS`).
+Skrip aman dijalankan ulang karena memakai `DROP ... IF EXISTS` sebelum membuat objek.
 
-### 3. Backend setup
+### 3. Setup Backend
 
 ```bash
 cd backend
@@ -134,19 +134,19 @@ npm install
 cp .env.example .env        # Windows: copy .env.example .env
 ```
 
-Edit `.env` and set your PostgreSQL password (and any other values). Then start the server:
+Buka file `.env`, lalu sesuaikan password PostgreSQL Anda (dan nilai lain bila perlu). Kemudian jalankan server:
 
 ```bash
-npm run dev                 # development (nodemon)
-# or
-npm start                   # production
+npm run dev                 # mode development (nodemon)
+# atau
+npm start                   # mode production
 ```
 
-The API runs at **http://localhost:5000**. All endpoints are served under the `/api` prefix (e.g. `http://localhost:5000/api/login`).
+Backend berjalan di **http://localhost:5000**. Seluruh endpoint berada di bawah prefix `/api` (contoh: `http://localhost:5000/api/login`).
 
-### 4. Frontend setup
+### 4. Setup Frontend
 
-Open a **second terminal** (keep the backend running):
+Buka **terminal kedua** (biarkan backend tetap berjalan):
 
 ```bash
 cd frontend
@@ -155,82 +155,82 @@ cp .env.example .env        # Windows: copy .env.example .env
 npm run dev
 ```
 
-The app runs at **http://localhost:5173**. Open it in your browser and log in with one of the demo accounts below.
+Aplikasi berjalan di **http://localhost:5173**. Buka di browser, lalu login memakai salah satu akun demo di bawah.
 
 ---
 
-## Demo Accounts
+## Akun Demo
 
-All seeded accounts use the password **`password123`**.
+Semua akun demo memakai password **`password123`**.
 
-| Role                 | Email               | Access                                             |
+| Peran                | Email               | Akses                                              |
 | -------------------- | ------------------- | -------------------------------------------------- |
-| Administrator        | `admin@clinic.com`  | Full access to all modules                         |
-| Dokter               | `dokter@clinic.com` | Queue + Examination (SOAP, actions, prescriptions) |
-| Petugas Pendaftaran  | `petugas@clinic.com`| Patients, Registrations, Queue                     |
+| Administrator        | `admin@clinic.com`  | Akses penuh ke seluruh modul                       |
+| Dokter               | `dokter@clinic.com` | Antrean + Pemeriksaan (SOAP, tindakan, resep)      |
+| Petugas Pendaftaran  | `petugas@clinic.com`| Data Pasien, Pendaftaran, Antrean                  |
 
 ---
 
-## Environment Variables
+## Variabel Lingkungan (.env)
 
 **Backend** (`backend/.env`)
 
-| Variable         | Description                          | Example              |
+| Variabel         | Keterangan                           | Contoh               |
 | ---------------- | ------------------------------------ | -------------------- |
-| `PORT`           | Port the API listens on              | `5000`               |
-| `DB_HOST`        | PostgreSQL host                      | `localhost`          |
-| `DB_PORT`        | PostgreSQL port                      | `5432`               |
-| `DB_USER`        | PostgreSQL user                      | `postgres`           |
-| `DB_PASSWORD`    | PostgreSQL password                  | `your_password`      |
-| `DB_NAME`        | Database name                        | `clinic_db`          |
-| `JWT_SECRET`     | Secret used to sign JWTs             | `change_this_secret` |
-| `JWT_EXPIRES_IN` | Token lifetime                       | `1d`                 |
+| `PORT`           | Port tempat API berjalan             | `5000`               |
+| `DB_HOST`        | Host PostgreSQL                      | `localhost`          |
+| `DB_PORT`        | Port PostgreSQL                      | `5432`               |
+| `DB_USER`        | User PostgreSQL                      | `postgres`           |
+| `DB_PASSWORD`    | Password PostgreSQL                  | `your_password`      |
+| `DB_NAME`        | Nama database                        | `clinic_db`          |
+| `JWT_SECRET`     | Kunci rahasia untuk menandatangani JWT | `ganti_dengan_string_acak` |
+| `JWT_EXPIRES_IN` | Masa berlaku token                   | `1d`                 |
 
 **Frontend** (`frontend/.env`)
 
-| Variable        | Description                        | Example                 |
-| --------------- | ---------------------------------- | ----------------------- |
-| `VITE_API_URL`  | Base URL of the backend (no `/api`)| `http://localhost:5000` |
+| Variabel        | Keterangan                          | Contoh                  |
+| --------------- | ----------------------------------- | ----------------------- |
+| `VITE_API_URL`  | Base URL backend (tanpa `/api`)     | `http://localhost:5000` |
 
-> No secrets are hard-coded anywhere in the source. Both `.env` files are git-ignored; only the `.env.example` templates are committed.
+> Tidak ada kredensial yang ditulis langsung di dalam kode. Kedua file `.env` diabaikan oleh git; hanya template `.env.example` yang di-commit ke repository.
 
 ---
 
-## API Reference
+## Daftar API
 
 Base URL: **`http://localhost:5000/api`**
 
-All endpoints except `POST /login` require an `Authorization: Bearer <token>` header.
+Seluruh endpoint kecuali `POST /login` membutuhkan header `Authorization: Bearer <token>`.
 
-| Method | Endpoint                      | Description                                   | Roles                          |
+| Method | Endpoint                      | Keterangan                                    | Peran                          |
 | ------ | ----------------------------- | --------------------------------------------- | ------------------------------ |
-| POST   | `/login`                      | Authenticate, returns JWT                     | Public                         |
-| POST   | `/logout`                     | Log out                                       | Authenticated                  |
-| GET    | `/patients`                   | List patients (search, paginate)              | Administrator, Petugas         |
-| POST   | `/patients`                   | Create patient                                | Administrator, Petugas         |
-| PUT    | `/patients/:id`               | Update patient                                | Administrator, Petugas         |
-| DELETE | `/patients/:id`               | Delete patient                                | Administrator                  |
-| GET    | `/registrations`              | List registrations                            | Administrator, Petugas, Dokter |
-| POST   | `/registrations`              | Create registration                           | Administrator, Petugas         |
-| PUT    | `/registrations/:id`          | Update registration                           | Administrator, Petugas         |
-| GET    | `/queues`                     | List today's queue                            | All                            |
-| POST   | `/queues`                     | Create queue number                           | Administrator, Petugas         |
-| PUT    | `/queues/:id/call`            | Call the queue                                | All                            |
-| PUT    | `/queues/:id/status`          | Change queue status                           | All                            |
-| POST   | `/medical-records`            | Create SOAP record (+ actions, prescription)  | Administrator, Dokter          |
-| GET    | `/medical-records/:patientId` | Patient examination history                   | Administrator, Dokter          |
-| POST   | `/prescriptions`              | Create prescription                           | Administrator, Dokter          |
-| GET    | `/prescriptions/:id`          | Get prescription                              | Administrator, Dokter          |
-| GET    | `/dashboard`                  | Dashboard summary counts                      | All                            |
-| GET    | `/poli`                       | List poli (for dropdowns)                     | Authenticated                  |
-| GET    | `/doctors`                    | List doctors (for dropdowns)                  | Authenticated                  |
-| GET    | `/medications`                | List medications (for dropdowns)              | Authenticated                  |
+| POST   | `/login`                      | Autentikasi, mengembalikan JWT                | Publik                         |
+| POST   | `/logout`                     | Logout                                        | Terautentikasi                 |
+| GET    | `/patients`                   | Daftar pasien (pencarian, pagination)         | Administrator, Petugas         |
+| POST   | `/patients`                   | Tambah pasien                                 | Administrator, Petugas         |
+| PUT    | `/patients/:id`               | Ubah pasien                                   | Administrator, Petugas         |
+| DELETE | `/patients/:id`               | Hapus pasien                                  | Administrator                  |
+| GET    | `/registrations`              | Daftar pendaftaran                            | Administrator, Petugas, Dokter |
+| POST   | `/registrations`              | Buat pendaftaran                              | Administrator, Petugas         |
+| PUT    | `/registrations/:id`          | Ubah pendaftaran                              | Administrator, Petugas         |
+| GET    | `/queues`                     | Daftar antrean hari ini                       | Semua                          |
+| POST   | `/queues`                     | Buat nomor antrean                            | Administrator, Petugas         |
+| PUT    | `/queues/:id/call`            | Panggil antrean                               | Semua                          |
+| PUT    | `/queues/:id/status`          | Ubah status antrean                           | Semua                          |
+| POST   | `/medical-records`            | Buat rekam medis SOAP (+ tindakan, resep)     | Administrator, Dokter          |
+| GET    | `/medical-records/:patientId` | Riwayat pemeriksaan pasien                    | Administrator, Dokter          |
+| POST   | `/prescriptions`              | Buat resep                                    | Administrator, Dokter          |
+| GET    | `/prescriptions/:id`          | Ambil detail resep                            | Administrator, Dokter          |
+| GET    | `/dashboard`                  | Ringkasan angka dashboard                     | Semua                          |
+| GET    | `/poli`                       | Daftar poli (untuk dropdown)                  | Terautentikasi                 |
+| GET    | `/doctors`                    | Daftar dokter (untuk dropdown)                | Terautentikasi                 |
+| GET    | `/medications`                | Daftar obat (untuk dropdown)                  | Terautentikasi                 |
 
-### Response format
+### Format Response
 
-Every response follows a consistent envelope.
+Setiap response mengikuti format yang konsisten.
 
-**Success**
+**Sukses**
 
 ```json
 {
@@ -252,9 +252,9 @@ Every response follows a consistent envelope.
 
 ---
 
-## Roles & Permissions
+## Hak Akses per Peran
 
-| Module                | Administrator | Dokter | Petugas Pendaftaran |
+| Modul                 | Administrator | Dokter | Petugas Pendaftaran |
 | --------------------- | :-----------: | :----: | :-----------------: |
 | Dashboard             | ✓             | ✓      | ✓                   |
 | Data Pasien (CRUD)    | ✓             | –      | ✓                   |
@@ -264,11 +264,11 @@ Every response follows a consistent envelope.
 
 ---
 
-## Notes & Assumptions
+## Catatan & Asumsi
 
-- All API routes are mounted under the **`/api`** prefix. When testing with Postman, use `http://localhost:5000/api` as the base URL.
-- Medical record numbers are generated automatically by the database (`RM` + zero-padded sequence).
-- Queue numbers are generated per poli per day, formatted as the poli code plus a padded counter (e.g. `A001`).
-- Passwords are hashed with bcrypt; the seeded demo password is `password123`.
-- The JWT is stored in the browser's `localStorage` and attached to every request by an Axios interceptor; a `401` response clears the session and redirects to the login page.
-- `database.sql` doubles as the migration file — it is idempotent and includes seed data for immediate testing.
+- Seluruh route API berada di bawah prefix **`/api`**. Saat pengujian dengan Postman, gunakan `http://localhost:5000/api` sebagai base URL.
+- Nomor rekam medis dibuat otomatis oleh database (`RM` + nomor urut dengan padding nol).
+- Nomor antrean dibuat per poli per hari, dengan format kode poli + nomor urut (contoh: `A001`).
+- Password di-hash menggunakan bcrypt; password akun demo adalah `password123`.
+- JWT disimpan di `localStorage` browser dan otomatis disisipkan pada setiap request melalui Axios interceptor; response `401` akan menghapus sesi dan mengarahkan kembali ke halaman login.
+- `database.sql` sekaligus berfungsi sebagai file migrasi — idempoten (aman dijalankan ulang) dan sudah menyertakan data awal untuk pengujian.
