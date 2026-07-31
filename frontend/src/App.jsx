@@ -1,34 +1,25 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import ProtectedRoute from './components/ProtectedRoute';
+import Layout from './components/Layout';
+import LoginPage from './pages/LoginPage';
+import DashboardPage from './pages/DashboardPage';
+import PatientsPage from './pages/PatientsPage';
+import RegistrationsPage from './pages/RegistrationsPage';
+import QueuePage from './pages/QueuePage';
+import ExaminationPage from './pages/ExaminationPage';
 
-const Login = () => <div>Halaman Login</div>;
-const Dashboard = () => <div>Dashboard</div>;
-const MasterPasien = () => <div>Modul Master Data Pasien</div>;
-const Pendaftaran = () => <div>Modul Pendaftaran Pasien</div>;
-const Antrean = () => <div>Modul Antrean</div>;
-const Pemeriksaan = () => <div>Modul Pemeriksaan Dokter (SOAP)</div>;
-
-// Dummy Protected Route Wrapper
-const ProtectedRoute = ({ children }) => {
-    const isAuthenticated = true; // TODO: Replace with JWT logic
-    return isAuthenticated ? children : <Navigate to="/login" />;
-};
-
-const App = () => {
-    return (
-        <Router>
-            <Routes>
-                <Route path="/login" element={<Login />} />
-                
-                {/* Protected Routes */}
-                <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                <Route path="/pasien" element={<ProtectedRoute><MasterPasien /></ProtectedRoute>} />
-                <Route path="/pendaftaran" element={<ProtectedRoute><Pendaftaran /></ProtectedRoute>} />
-                <Route path="/antrean" element={<ProtectedRoute><Antrean /></ProtectedRoute>} />
-                <Route path="/pemeriksaan" element={<ProtectedRoute><Pemeriksaan /></ProtectedRoute>} />
-            </Routes>
-        </Router>
-    );
-};
-
-export default App;
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+        <Route path="/" element={<DashboardPage />} />
+        <Route path="/patients" element={<ProtectedRoute roles={['administrator', 'petugas']}><PatientsPage /></ProtectedRoute>} />
+        <Route path="/registrations" element={<ProtectedRoute roles={['administrator', 'petugas']}><RegistrationsPage /></ProtectedRoute>} />
+        <Route path="/queue" element={<QueuePage />} />
+        <Route path="/examination" element={<ProtectedRoute roles={['administrator', 'dokter']}><ExaminationPage /></ProtectedRoute>} />
+      </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}

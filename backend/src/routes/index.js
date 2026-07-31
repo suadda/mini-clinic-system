@@ -1,6 +1,7 @@
 const router = require('express').Router();
 
 router.use('/', require('./authRoutes'));
+router.use('/', require('./masterRoutes'));
 router.use('/patients', require('./patientRoutes'));
 router.use('/registrations', require('./registrationRoutes'));
 router.use('/queues', require('./queueRoutes'));
