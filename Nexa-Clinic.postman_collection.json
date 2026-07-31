@@ -1,0 +1,1218 @@
+{
+  "info": {
+    "_postman_id": "380a7de9-f932-458c-a17f-31f8f3bc4ccc",
+    "name": "Nexa Clinic API",
+    "description": "Koleksi lengkap REST API Sistem Informasi Klinik Nexa.\n\nCara pakai:\n1. Pastikan backend berjalan di http://localhost:5000.\n2. Jalankan request '1. Auth > Login (Administrator)' lebih dulu — token JWT otomatis tersimpan ke variable {{token}} dan dipakai semua request lain.\n3. Setiap request punya tab 'Tests' berisi pengujian otomatis (klik Send lalu lihat tab Test Results), atau jalankan seluruh koleksi lewat Collection Runner.\n\nBase URL memakai prefix /api → {{base_url}} = http://localhost:5000/api",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000/api"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "token_dokter",
+      "value": ""
+    },
+    {
+      "key": "token_petugas",
+      "value": ""
+    },
+    {
+      "key": "nik",
+      "value": ""
+    },
+    {
+      "key": "patient_id",
+      "value": "1"
+    },
+    {
+      "key": "poli_id",
+      "value": "1"
+    },
+    {
+      "key": "doctor_id",
+      "value": "1"
+    },
+    {
+      "key": "medication_id",
+      "value": "1"
+    },
+    {
+      "key": "registration_id",
+      "value": "2"
+    },
+    {
+      "key": "queue_id",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Auth",
+      "item": [
+        {
+          "name": "Login (Administrator)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@clinic.com\",\n  \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Login sebagai Administrator. Token JWT otomatis disimpan ke variable {{token}} dan dipakai request lain."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test(\"Status code 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Login berhasil (success true)\", () => pm.expect(json.success).to.be.true);",
+                  "pm.test(\"Token JWT diterima\", () => pm.expect(json.data.token).to.be.a(\"string\").and.to.have.length.above(10));",
+                  "pm.test(\"Data user dikembalikan\", () => pm.expect(json.data.user).to.be.an(\"object\"));",
+                  "if (json.data && json.data.token) {",
+                  "  pm.collectionVariables.set(\"token\", json.data.token);",
+                  "  console.log(\"Token tersimpan ke {{token}}\");",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login (Dokter)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"dokter@clinic.com\",\n  \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Login sebagai Dokter (untuk menguji hak akses modul Pemeriksaan)."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test(\"Status code 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Peran = dokter\", () => pm.expect(json.data.user.role).to.eql(\"dokter\"));",
+                  "// disimpan terpisah agar tidak menimpa token utama (admin) saat menjalankan seluruh koleksi",
+                  "if (json.data && json.data.token) pm.collectionVariables.set(\"token_dokter\", json.data.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login (Petugas)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"petugas@clinic.com\",\n  \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Login sebagai Petugas Pendaftaran."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test(\"Status code 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Peran = petugas\", () => pm.expect(json.data.user.role).to.eql(\"petugas\"));",
+                  "if (json.data && json.data.token) pm.collectionVariables.set(\"token_petugas\", json.data.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login GAGAL (password salah)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@clinic.com\",\n  \"password\": \"passwordsalah\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Uji negatif: kredensial salah harus ditolak dengan 401."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test(\"Status code 401 (unauthorized)\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"success bernilai false\", () => pm.expect(json.success).to.be.false);",
+                  "pm.test(\"Ada pesan error\", () => pm.expect(json.message).to.be.a(\"string\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Akses tanpa token (harus 401)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/patients",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "patients"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Uji negatif: endpoint terproteksi tanpa token harus 401."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test(\"Status code 401 (butuh autentikasi)\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"success bernilai false\", () => pm.expect(json.success).to.be.false);",
+                  "pm.test(\"Ada pesan error\", () => pm.expect(json.message).to.be.a(\"string\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Master Data",
+      "item": [
+        {
+          "name": "Daftar Poli",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/poli",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "poli"
+              ]
+            },
+            "description": "Daftar poli untuk dropdown. Menyimpan {{poli_id}}."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test(\"Status code 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"success bernilai true\", () => pm.expect(json.success).to.be.true);",
+                  "pm.test(\"Ada properti data\", () => pm.expect(json).to.have.property(\"data\"));",
+                  "",
+                  "pm.test(\"data.items berupa array\", () => pm.expect(json.data.items).to.be.an(\"array\"));",
+                  "if (json.data.items.length) pm.collectionVariables.set(\"poli_id\", json.data.items[0].id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Daftar Dokter",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/doctors",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "doctors"
+              ]
+            },
+            "description": "Daftar dokter untuk dropdown. Menyimpan {{doctor_id}}."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test(\"Status code 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"success bernilai true\", () => pm.expect(json.success).to.be.true);",
+                  "pm.test(\"Ada properti data\", () => pm.expect(json).to.have.property(\"data\"));",
+                  "",
+                  "if (json.data.items.length) pm.collectionVariables.set(\"doctor_id\", json.data.items[0].id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Daftar Obat",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/medications",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "medications"
+              ]
+            },
+            "description": "Daftar obat untuk dropdown resep. Menyimpan {{medication_id}}."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test(\"Status code 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"success bernilai true\", () => pm.expect(json.success).to.be.true);",
+                  "pm.test(\"Ada properti data\", () => pm.expect(json).to.have.property(\"data\"));",
+                  "",
+                  "if (json.data.items.length) pm.collectionVariables.set(\"medication_id\", json.data.items[0].id);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Data Pasien",
+      "item": [
+        {
+          "name": "Daftar Pasien (pencarian + pagination)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/patients?page=1&limit=8&search=",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "patients"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "8"
+                },
+                {
+                  "key": "search",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Daftar pasien dengan pagination dan pencarian."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test(\"Status code 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"success bernilai true\", () => pm.expect(json.success).to.be.true);",
+                  "pm.test(\"Ada properti data\", () => pm.expect(json).to.have.property(\"data\"));",
+                  "",
+                  "pm.test(\"data.items berupa array\", () => pm.expect(json.data.items).to.be.an(\"array\"));",
+                  "pm.test(\"Ada info pagination (totalPages)\", () => pm.expect(json.data.pagination).to.have.property(\"totalPages\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tambah Pasien",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/patients",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "patients"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nik\": \"{{nik}}\",\n  \"nama\": \"Budi Santoso\",\n  \"jenis_kelamin\": \"L\",\n  \"tanggal_lahir\": \"1990-05-17\",\n  \"no_telepon\": \"081234567890\",\n  \"alamat\": \"Jl. Merdeka No. 10, Bandung\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Tambah pasien baru. NIK acak dibuat di pre-request script. Menyimpan {{patient_id}}."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Buat NIK 16 digit acak agar collection bisa dijalankan berulang tanpa bentrok",
+                  "const nik = Array.from({length:16}, () => Math.floor(Math.random()*10)).join(\"\");",
+                  "pm.collectionVariables.set(\"nik\", nik);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test(\"Status code 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"success bernilai true\", () => pm.expect(json.success).to.be.true);",
+                  "pm.test(\"Ada properti data\", () => pm.expect(json).to.have.property(\"data\"));",
+                  "",
+                  "pm.test(\"No. rekam medis dibuat otomatis\", () => pm.expect(json.data).to.have.property(\"no_rekam_medis\"));",
+                  "if (json.data && json.data.id) pm.collectionVariables.set(\"patient_id\", json.data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Detail / Update Pasien",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/patients/{{patient_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "patients",
+                "{{patient_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nik\": \"{{nik}}\",\n  \"nama\": \"Budi Santoso (diperbarui)\",\n  \"jenis_kelamin\": \"L\",\n  \"tanggal_lahir\": \"1990-05-17\",\n  \"no_telepon\": \"081200000000\",\n  \"alamat\": \"Jl. Asia Afrika No. 1, Bandung\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Perbarui data pasien yang baru dibuat."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test(\"Status code 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"success bernilai true\", () => pm.expect(json.success).to.be.true);",
+                  "pm.test(\"Ada properti data\", () => pm.expect(json).to.have.property(\"data\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tambah Pasien GAGAL (NIK tidak valid)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/patients",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "patients"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nik\": \"123\",\n  \"nama\": \"NIK Pendek\",\n  \"jenis_kelamin\": \"L\",\n  \"tanggal_lahir\": \"1990-01-01\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Uji validasi: NIK harus 16 digit → 422 (Unprocessable Entity)."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test(\"Status code validasi (422)\", () => pm.expect(pm.response.code).to.be.oneOf([400, 422]));",
+                  "pm.test(\"success bernilai false\", () => pm.expect(json.success).to.be.false);",
+                  "pm.test(\"Ada detail errors\", () => pm.expect(json.errors).to.be.an(\"object\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tambah Pasien GAGAL (NIK duplikat)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/patients",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "patients"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nik\": \"{{nik}}\",\n  \"nama\": \"Duplikat\",\n  \"jenis_kelamin\": \"L\",\n  \"tanggal_lahir\": \"1990-01-01\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Uji constraint unik: memakai NIK yang sama dengan pasien yang baru dibuat → 409."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test(\"Status code 409 (NIK sudah terdaftar)\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"success bernilai false\", () => pm.expect(json.success).to.be.false);",
+                  "pm.test(\"Ada pesan error\", () => pm.expect(json.message).to.be.a(\"string\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Hapus Pasien",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/patients/{{patient_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "patients",
+                "{{patient_id}}"
+              ]
+            },
+            "description": "Hapus pasien (khusus Administrator). Jalankan setelah pengujian lain jika ingin data tetap ada."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test(\"Status code 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"success true\", () => pm.expect(json.success).to.be.true);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Pendaftaran",
+      "item": [
+        {
+          "name": "Buat Pendaftaran",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/registrations",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "registrations"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patient_id\": 1,\n  \"doctor_id\": \"{{doctor_id}}\",\n  \"poli_id\": \"{{poli_id}}\",\n  \"tanggal_kunjungan\": \"2026-01-15\",\n  \"jenis_pembayaran\": \"umum\",\n  \"keluhan_awal\": \"Demam dan batuk sejak 3 hari\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Daftarkan kunjungan pasien. Menyimpan {{registration_id}}. Jalankan 'Master Data' dulu agar {{poli_id}} & {{doctor_id}} terisi."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test(\"Status code 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"success bernilai true\", () => pm.expect(json.success).to.be.true);",
+                  "pm.test(\"Ada properti data\", () => pm.expect(json).to.have.property(\"data\"));",
+                  "",
+                  "if (json.data && json.data.id) pm.collectionVariables.set(\"registration_id\", json.data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Daftar Pendaftaran",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/registrations",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "registrations"
+              ]
+            },
+            "description": "Daftar seluruh pendaftaran."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test(\"Status code 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"success bernilai true\", () => pm.expect(json.success).to.be.true);",
+                  "pm.test(\"Ada properti data\", () => pm.expect(json).to.have.property(\"data\"));",
+                  "",
+                  "pm.test(\"data.items berupa array\", () => pm.expect(json.data.items).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Pendaftaran",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/registrations/{{registration_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "registrations",
+                "{{registration_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"check_in\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Perbarui status pendaftaran (mis. check_in)."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test(\"Status code 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"success bernilai true\", () => pm.expect(json.success).to.be.true);",
+                  "pm.test(\"Ada properti data\", () => pm.expect(json).to.have.property(\"data\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Antrean",
+      "item": [
+        {
+          "name": "Buat Antrean",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/queues",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "queues"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"registration_id\": \"{{registration_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Buat nomor antrean dari sebuah pendaftaran. Menyimpan {{queue_id}}."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test(\"Status code 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"success bernilai true\", () => pm.expect(json.success).to.be.true);",
+                  "pm.test(\"Ada properti data\", () => pm.expect(json).to.have.property(\"data\"));",
+                  "",
+                  "pm.test(\"Nomor antrean dibuat\", () => pm.expect(json.data).to.have.property(\"queue_number\"));",
+                  "if (json.data && json.data.id) pm.collectionVariables.set(\"queue_id\", json.data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Daftar Antrean Hari Ini",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/queues",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "queues"
+              ]
+            },
+            "description": "Daftar antrean hari ini."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test(\"Status code 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"success bernilai true\", () => pm.expect(json.success).to.be.true);",
+                  "pm.test(\"Ada properti data\", () => pm.expect(json).to.have.property(\"data\"));",
+                  "",
+                  "pm.test(\"data.items berupa array\", () => pm.expect(json.data.items).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Panggil Antrean",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/queues/{{queue_id}}/call",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "queues",
+                "{{queue_id}}",
+                "call"
+              ]
+            },
+            "description": "Panggil antrean (status → dipanggil)."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test(\"Status code 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"success bernilai true\", () => pm.expect(json.success).to.be.true);",
+                  "pm.test(\"Ada properti data\", () => pm.expect(json).to.have.property(\"data\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ubah Status Antrean",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/queues/{{queue_id}}/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "queues",
+                "{{queue_id}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"dilayani\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Ubah status antrean (menunggu / dipanggil / dilayani / selesai / dilewati)."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test(\"Status code 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"success bernilai true\", () => pm.expect(json.success).to.be.true);",
+                  "pm.test(\"Ada properti data\", () => pm.expect(json).to.have.property(\"data\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. Pemeriksaan (Rekam Medis)",
+      "item": [
+        {
+          "name": "Buat Rekam Medis (SOAP)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/medical-records",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "medical-records"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"registration_id\": \"{{registration_id}}\",\n  \"keluhan\": \"Demam, batuk berdahak, nyeri tenggorokan\",\n  \"tekanan_darah\": \"120/80\",\n  \"suhu_tubuh\": 38.5,\n  \"berat_badan\": 65,\n  \"tinggi_badan\": 170,\n  \"diagnosa\": \"ISPA (Infeksi Saluran Pernapasan Akut)\",\n  \"rencana_terapi\": \"Istirahat cukup, banyak minum air, kontrol 3 hari lagi\",\n  \"actions\": [\n    {\n      \"nama_tindakan\": \"Pemeriksaan fisik\",\n      \"biaya\": 50000\n    }\n  ],\n  \"prescription\": {\n    \"catatan\": \"Habiskan antibiotik\",\n    \"items\": [\n      {\n        \"medication_id\": \"{{medication_id}}\",\n        \"nama_obat\": \"Paracetamol 500mg\",\n        \"dosis\": \"3x1\",\n        \"jumlah\": 10,\n        \"aturan_pakai\": \"Sesudah makan\"\n      }\n    ]\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Simpan hasil pemeriksaan SOAP + tindakan + resep dalam satu transaksi. Otomatis menandai pendaftaran & antrean 'selesai'."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test(\"Status code 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"success bernilai true\", () => pm.expect(json.success).to.be.true);",
+                  "pm.test(\"Ada properti data\", () => pm.expect(json).to.have.property(\"data\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Riwayat Pemeriksaan Pasien",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/medical-records/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "medical-records",
+                "1"
+              ]
+            },
+            "description": "Ambil riwayat rekam medis berdasarkan patientId (contoh memakai patient_id = 1 dari data seed)."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test(\"Status code 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"success bernilai true\", () => pm.expect(json.success).to.be.true);",
+                  "pm.test(\"Ada properti data\", () => pm.expect(json).to.have.property(\"data\"));",
+                  "",
+                  "pm.test(\"Ada daftar records\", () => pm.expect(json.data.records).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "7. Resep",
+      "item": [
+        {
+          "name": "Detail Resep",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/prescriptions/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "prescriptions",
+                "1"
+              ]
+            },
+            "description": "Ambil detail resep berdasarkan id (contoh id = 1 dari data seed)."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test(\"Status code 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"success true\", () => pm.expect(json.success).to.be.true);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "8. Dashboard",
+      "item": [
+        {
+          "name": "Statistik Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/dashboard",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard"
+              ]
+            },
+            "description": "Ringkasan angka untuk dashboard."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test(\"Status code 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"success bernilai true\", () => pm.expect(json.success).to.be.true);",
+                  "pm.test(\"Ada properti data\", () => pm.expect(json).to.have.property(\"data\"));",
+                  "",
+                  "pm.test(\"Ada total_pasien\", () => pm.expect(json.data).to.have.property(\"total_pasien\"));",
+                  "pm.test(\"Ada antrean_hari_ini\", () => pm.expect(json.data).to.have.property(\"antrean_hari_ini\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "9. Logout",
+      "item": [
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "logout"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Logout pengguna (dijalankan terakhir agar tidak mengganggu alur pengujian)."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "pm.test(\"Status code 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"success true\", () => pm.expect(json.success).to.be.true);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
