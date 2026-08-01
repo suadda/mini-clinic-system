@@ -11,6 +11,7 @@ Dibuat sebagai technical assignment: frontend **React**, REST API **Node.js / Ex
 - [Teknologi](#teknologi)
 - [Fitur](#fitur)
 - [Struktur Proyek](#struktur-proyek)
+- [Desain Database (ERD)](#desain-database-erd)
 - [Prasyarat](#prasyarat)
 - [Cara Menjalankan](#cara-menjalankan)
   - [1. Clone Repository](#1-clone-repository)
@@ -84,6 +85,141 @@ nexa-clinic-system/
 ├── database.sql            # skema + data awal (seed)
 └── README.md
 ```
+
+---
+
+## Desain Database (ERD)
+
+Database: **PostgreSQL**. Diagram berikut dirender otomatis oleh GitHub (Mermaid).
+
+```mermaid
+erDiagram
+    users ||--o| doctors : "punya akun login"
+    users ||--o{ registrations : "created_by (petugas)"
+    poli ||--o{ doctors : "ditugaskan ke"
+    poli ||--o{ registrations : "dikunjungi"
+    poli ||--o{ queues : "milik"
+    patients ||--o{ registrations : "melakukan"
+    patients ||--o{ medical_records : "punya riwayat"
+    doctors ||--o{ registrations : "menangani"
+    doctors ||--o{ medical_records : "mencatat"
+    registrations ||--|| queues : "menghasilkan"
+    registrations ||--o| medical_records : "menghasilkan"
+    medical_records ||--o{ medical_actions : "mencakup"
+    medical_records ||--o| prescriptions : "menghasilkan"
+    prescriptions ||--o{ prescription_items : "berisi"
+    medications ||--o{ prescription_items : "terdaftar sebagai"
+
+    users {
+        serial id PK
+        varchar name
+        varchar email UK
+        varchar password "bcrypt hash"
+        enum role "administrator | dokter | petugas"
+        boolean is_active
+    }
+
+    poli {
+        serial id PK
+        varchar nama
+        varchar kode UK "prefix antrean, mis. A"
+    }
+
+    doctors {
+        serial id PK
+        int user_id FK "UK, nullable"
+        varchar nama
+        varchar spesialisasi
+        int poli_id FK
+        varchar no_str
+    }
+
+    patients {
+        serial id PK
+        varchar no_rekam_medis UK "auto RM000001"
+        varchar nik UK "16 digit, dicek"
+        varchar nama
+        enum jenis_kelamin "L | P"
+        date tanggal_lahir
+        varchar no_telepon
+        text alamat
+    }
+
+    registrations {
+        serial id PK
+        int patient_id FK
+        int doctor_id FK
+        int poli_id FK
+        date tanggal_kunjungan
+        enum jenis_pembayaran "umum | bpjs | asuransi"
+        text keluhan_awal
+        enum status "menunggu | check_in | pemeriksaan | selesai"
+        int created_by FK
+    }
+
+    queues {
+        serial id PK
+        int registration_id FK "UK"
+        int poli_id FK
+        varchar queue_number "mis. A001"
+        date queue_date
+        enum status "menunggu | dipanggil | dilayani | selesai | dilewati"
+        timestamptz called_at
+    }
+
+    medical_records {
+        serial id PK
+        int registration_id FK "UK"
+        int patient_id FK
+        int doctor_id FK
+        text keluhan "S"
+        varchar tekanan_darah "O"
+        numeric suhu_tubuh "O"
+        numeric berat_badan "O"
+        numeric tinggi_badan "O"
+        text diagnosa "A"
+        text rencana_terapi "P"
+    }
+
+    medical_actions {
+        serial id PK
+        int medical_record_id FK
+        varchar nama_tindakan
+        numeric biaya
+        text keterangan
+    }
+
+    medications {
+        serial id PK
+        varchar nama_obat UK
+        varchar satuan
+    }
+
+    prescriptions {
+        serial id PK
+        int medical_record_id FK "UK"
+        text catatan
+    }
+
+    prescription_items {
+        serial id PK
+        int prescription_id FK
+        int medication_id FK "nullable"
+        varchar nama_obat
+        varchar dosis
+        int jumlah
+        varchar aturan_pakai
+    }
+```
+
+**Catatan relasi:**
+
+- Seorang **dokter** dapat ditautkan ke satu **user** (peran `dokter`) sehingga orang yang sama bisa login sekaligus dipilih saat pendaftaran.
+- Setiap **registrations** menghasilkan tepat satu baris **queues** (`registration_id` bersifat unik).
+- **medical_records** dibuat hanya setelah dokter memeriksa pasien, jadi satu registrasi memiliki *nol atau satu* rekam medis.
+- **SOAP** dipetakan ke kolom pada `medical_records`: `keluhan` (S), tanda vital (O), `diagnosa` (A), `rencana_terapi` (P).
+- `medical_actions` (tindakan) serta `prescriptions` → `prescription_items` (resep) menempel pada rekam medis, sehingga tiap kunjungan memiliki jejak klinis yang lengkap.
+- Riwayat pemeriksaan pasien = seluruh `medical_records` untuk sebuah `patient_id`, diurutkan berdasarkan tanggal.
 
 ---
 
